@@ -1,0 +1,188 @@
+//chatbot Celebridade Cognitiva
+//
+
+var watson = require('watson-developer-cloud');
+var CONVERSATION_NAME = "Assistant-Demo"; // nome do workspace do Assistant
+var fs = require('fs');
+// load local VCAP configuration
+var appEnv = null;
+var conversationWorkspace, conversation;
+
+// =====================================
+// CONFIG DO SERVIÇO ==========
+// =====================================
+
+    conversation = watson.conversation({
+        url: "https://gateway.watsonplatform.net/conversation/api"
+        , username: "<username>" // Trocar <username>, incluindo "<" e ">"
+        , password: "<password>" // Trocar <password>, incluindo "<" e ">"
+        , version_date: '2017-04-10'
+        , version: 'v1'
+    });
+    
+    conversationWorkspace = "<workspace_id>"; // Trocar <workspace_id>, incluindo "<" e ">"
+
+
+var chatbot = {
+    sendMessage: function (req, callback) {
+//        var owner = req.user.username;
+        buildContextObject(req, function (err, params) {
+                if (err) {
+                    console.log("Error in building the parameters object: ", err);
+                    return callback(err);
+                }
+                if (params.message) {
+                    var conv = req.body.context.conversation_id;
+                    var context = req.body.context;
+                    var res = {
+                        intents: []
+                        , entities: []
+                        , input: req.body.text
+                        , output: {
+                            text: params.message
+                        }
+                        , context: context
+                    };
+                    //                chatLogs(owner, conv, res, () => {
+                    //                    return 
+                    callback(null, res);
+                    //                });
+                }
+                else if (params) {
+                    // Send message to the conversation service with the current context
+                    conversation.message(params, function (err, data) {
+                            if (err) {
+                                console.log("Error in sending message: ", err);
+                                return callback(err);
+                            }else{
+                                
+                            var conv = data.context.conversation_id;
+                            console.log("Got response from Ana: ", JSON.stringify(data));
+//                            if (data.context.system.dialog_turn_counter > 1) {
+//                                chatLogs(owner, conv, data, () => {
+//                                    return callback(null, data);
+//                                });
+//                            }
+//                            else {
+                                return callback(null, data);
+//                            }
+                        }
+                    });
+            }
+        });
+}
+};
+// ===============================================
+// LOG =========
+// ===============================================
+function chatLogs(owner, conversation, response, callback) {
+    console.log("Response object is: ", response);
+    // Blank log file to parse down the response object
+    var logFile = {
+        inputText: ''
+        , responseText: ''
+        , entities: {}
+        , intents: {}
+    , };
+    logFile.inputText = response.input.text;
+    logFile.responseText = response.output.text;
+    logFile.entities = response.entities;
+    logFile.intents = response.intents;
+    logFile.date = new Date();
+    var date = new Date();
+    var doc = {};
+    Logs.find({
+        selector: {
+            'conversation': conversation
+        }
+    }, function (err, result) {
+        if (err) {
+            console.log("Couldn't find logs.");
+            callback(null);
+        }
+        else {
+            doc = result.docs[0];
+            if (result.docs.length === 0) {
+                console.log("No log. Creating new one.");
+                doc = {
+                    owner: owner
+                    , date: date
+                    , conversation: conversation
+                    , lastContext: response.context
+                    , logs: []
+                };
+                doc.logs.push(logFile);
+                Logs.insert(doc, function (err, body) {
+                    if (err) {
+                        console.log("There was an error creating the log: ", err);
+                    }
+                    else {
+                        console.log("Log successfull created: ", body);
+                    }
+                    callback(null);
+                });
+            }
+            else {
+                doc.lastContext = response.context;
+                doc.logs.push(logFile);
+                Logs.insert(doc, function (err, body) {
+                    if (err) {
+                        console.log("There was an error updating the log: ", err);
+                    }
+                    else {
+                        console.log("Log successfull updated: ", body);
+                    }
+                    callback(null);
+                });
+            }
+        }
+    });
+}
+// ===============================================
+// FUNÇÕES DO BOT ========
+// ===============================================
+/**
+ * @summary Form the parameter object to be sent to the service
+ *
+ * Update the context object based on the user state in the conversation and
+ * the existence of variables.
+ *
+ * @function buildContextObject
+ * @param {Object} req - Req by user sent in POST with session and user message
+ */
+function buildContextObject(req, callback) {
+    var message = req.body.text;
+//    var userTime = req.body.user_time;
+    var context;
+    if (!message) {
+        message = '';
+    }
+    // Null out the parameter object to start building
+    var params = {
+        workspace_id: conversationWorkspace
+        , input: {}
+        , context: {}
+    };
+
+    
+    if (req.body.context) {
+        context = req.body.context;
+        params.context = context;
+    }
+    else {
+        context = '';
+    }
+    // Set parameters for payload to Watson Conversation
+    params.input = {
+        text: message // User defined text to be sent to service
+    };
+    // This is the first message, add the user's name and get their healthcare object
+//    if ((!message || message === '') && !context) {
+//        params.context = {
+//            fname: req.user.fname
+//            , lname: req.user.lname
+//        };
+//    }
+    return callback(null, params);
+}
+module.exports = chatbot;
