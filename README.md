@@ -1,18 +1,18 @@
 # Chatbot com Watson
 
-This app is a front-end of a chatbot that uses Watson Conversation. 
-Please do the following steps:
-1) Create a account on https://www.bluemix.net;
-2) Go to Bluemix catalog and create a Watson Conversation service;
-3) Create a conversation as the guidance -->> 
-4) Back to Bluemix catalog and create Continuous Delivery service and follwoing steps -->>
-5) Change the file config/bot.js with your credentials of Watson Conversation and WOrkspace id create, in lines 26, 27 and 32, as the following:
+Esse app contém um front que comunica com o Watson Assistant;
+Siga os seguintes passos:
+1) Crie uma conta no https://www.bluemix.net;
+2) No catálogo busque por Watson Assistant e crie o serviço;
+3) Crie um chatbot;
+4) Clique no botão "Deploy to IBM Cloud";
+5) Mude o arquivo config/bot.js com as suas credenciais do Watson Assistant, dessa forma:
+
     username = "xxxx-xxxx-xxxxxx-xxxx";
     password = "xxxxxxxx";
     conversationWorkspace = "xxx-xxxxx-xxxxx-xxxxx-xxxx";
 
-
-[![Deploy to Bluemix](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy?repository=https://github.com/priscillaparodi/youtube-bot)
+[![Deploy to IBM Cloud](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy?repository=https://github.com/priscillaparodi/celebridade)
 
 ## Para executar o app localmente
 
@@ -29,4 +29,3 @@ Please do the following steps:
 + Acesse a aplicação no browser no link <http://localhost:6001>
 
 [Instale Node.js]: https://nodejs.org/en/download/
-"# Conversation-demo" 
